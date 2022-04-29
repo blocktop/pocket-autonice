@@ -1,7 +1,9 @@
 package renicer
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"github.com/blocktop/pocket-autonice/config"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -16,15 +18,15 @@ import (
 )
 
 var (
-	renicers = make(map[string]*renicer)
+	renicers    = make(map[string]*renicer)
 	revertDelay = time.Duration(viper.GetInt(config.NiceRevertDelayMinutes)) * time.Minute
 )
 
 type renicer struct {
-	ctx context.Context
+	ctx    context.Context
 	cancel context.CancelFunc
-	user string
-	chain string
+	user   string
+	chain  string
 }
 
 func init() {
@@ -33,17 +35,49 @@ func init() {
 
 func Renice(chainID string) {
 	chainID = strings.ToUpper(chainID)
-	user := viper.GetString(chainID)
+	user := getUserForChainID(chainID)
+	if user == nil {
+		return
+	}
 
 	rn, ok := renicers[chainID]
 	if !ok {
 		rn := &renicer{
-			user: user,
+			user:  *user,
 			chain: chainID,
 		}
 		renicers[chainID] = rn
 	}
 	rn.renice()
+}
+
+func GetNiceValue(chainID string) (int, error) {
+	chainID = strings.ToUpper(chainID)
+	user := getUserForChainID(chainID)
+	if user == nil {
+		return 0, fmt.Errorf("chainID %s is not configured", chainID)
+	}
+	cmd := exec.Command("ps", "-u", *user, "-o", "ni=")
+	var outData bytes.Buffer
+	cmd.Stdout = &outData
+
+	if err := cmd.Run(); err != nil {
+		return 0, errors.Wrap(err, "ps command failed")
+	}
+
+	outStr := outData.String()
+	outs := strings.Split(outStr, "\n")
+	if len(outs) == 0 {
+		return 0, fmt.Errorf("no nice value was found")
+	}
+	out := strings.TrimSpace(outs[0])
+
+	nice, err := strconv.Atoi(string(out))
+	if err != nil {
+		return 0, fmt.Errorf("unable to convert output '%s' to an integer: %s", string(out), err)
+	}
+
+	return nice, nil
 }
 
 func (rn *renicer) renice() {
@@ -53,11 +87,12 @@ func (rn *renicer) renice() {
 	rn.cancel = cancel
 
 	if alreadyReniced {
-		// in effect, we just extended the timeout
+		log.Debugf("reset revert timeer for chain %s", rn.chain)
 		return
 	}
 
 	niceValue := viper.GetInt(config.NiceValue)
+	log.Infof("renicing chain %s (%s) to %d", rn.chain, rn.user, niceValue)
 	if err := rn.runRenice(niceValue); err != nil {
 		log.Errorf("failed to renice %s user for relay chain %s: %s", rn.user, rn.chain, err)
 		rn.cancel()
@@ -70,7 +105,7 @@ func (rn *renicer) renice() {
 func (rn *renicer) waitForTimeout() {
 	for {
 		select {
-		case <- rn.ctx.Done():
+		case <-rn.ctx.Done():
 			rn.cancel()
 			go rn.revertNice()
 			return
@@ -79,6 +114,7 @@ func (rn *renicer) waitForTimeout() {
 }
 
 func (rn *renicer) revertNice() {
+	log.Infof("reverting niceness of chain %s (%s)) to 0", rn.chain, rn.user)
 	if err := rn.runRenice(0); err != nil {
 		log.Errorf("failed to revert niceness of user %s for chain %s: %s", rn.user, rn.chain, err)
 	}
@@ -111,4 +147,13 @@ func awaitStop() {
 			go rn.runRenice(0)
 		}
 	}
+}
+
+func getUserForChainID(chainID string) *string {
+	if !viper.IsSet(chainID) {
+		return nil
+	}
+
+	user := viper.GetString(chainID)
+	return &user
 }

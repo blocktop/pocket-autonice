@@ -19,7 +19,7 @@ var (
 	svr         *http.Server
 	publisher   *zeromq.Publisher
 	pubsubTopic string
-	serving     bool
+	shunting    bool
 )
 
 type MirrorData struct {
@@ -42,7 +42,7 @@ func Start() {
 		Handler: r,
 	}
 
-	serving = true
+	shunting = false
 
 	log.Infof("starting server on %s", addr)
 	go func() {
@@ -56,19 +56,21 @@ func Start() {
 
 	<-sigs
 
+	log.Info("stopping server")
+
 	if err := svr.Close(); err != nil {
 		log.Errorf("server failed to close: %s", err)
 	}
 }
 
 func postHandler(w http.ResponseWriter, r *http.Request) {
-	if !serving {
+	if shunting {
 		w.Write([]byte("server shunted"))
 		return
 	}
 	uri := r.Header.Get("X-Original-URI")
 	if uri == "" {
-		serving = false
+		shunting = true
 		log.Errorf("mirror request must have X-Original-URI header; see documentation")
 		w.Write([]byte("missing X-Original-URI header"))
 		return
@@ -102,8 +104,15 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Debugf("publishing message %s", data.RelayNetworkID)
 	if err = publisher.Publish([]byte(data.RelayNetworkID), pubsubTopic); err != nil {
 		log.Errorf("failed to publish %s from %s: %s", data.RelayNetworkID, uri, err)
+		w.Write([]byte("failed to publish"))
+		return
+	}
+	// boost pocket too
+	if err = publisher.Publish([]byte("0001"), pubsubTopic); err != nil {
+		log.Errorf("failed to publish 0001 from %s: %s", uri, err)
 		w.Write([]byte("failed to publish"))
 		return
 	}

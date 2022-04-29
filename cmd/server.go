@@ -5,7 +5,7 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
+	"github.com/blocktop/pocket-autonice/server"
 
 	"github.com/spf13/cobra"
 )
@@ -19,7 +19,7 @@ Once the nginx mirror is configured, this server MUST be running
 otherwise nginx will respond to all relay requests with an error.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("server called")
+		server.Start()
 	},
 }
 

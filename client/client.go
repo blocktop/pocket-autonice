@@ -1,8 +1,10 @@
 package client
 
 import (
+	"github.com/blocktop/pocket-autonice/config"
 	"github.com/blocktop/pocket-autonice/renicer"
 	"github.com/blocktop/pocket-autonice/zeromq"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"os"
 	"os/signal"
@@ -14,12 +16,14 @@ var (
 )
 
 func Start() {
-	pubsubTopic := viper.GetString(PubSubTopic)
+	pubsubTopic := viper.GetString(config.PubSubTopic)
 	messageChan := make(chan []byte, 256)
 	subscriber = zeromq.NewSubscriber(pubsubTopic, messageChan)
 	defer subscriber.Close()
 
 	stopChan := make(chan bool)
+
+	log.Info("starting message consumer")
 
 	go processMessages(messageChan, stopChan)
 
@@ -28,6 +32,7 @@ func Start() {
 
 	<-sigs
 
+	log.Info("stopping message consumer")
 	stopChan <- true
 }
 
@@ -35,6 +40,7 @@ func processMessages(messageChan chan []byte, stopChan chan bool) {
 	for {
 		select {
 		case msg := <-messageChan:
+			log.Debugf("consumer received message %s", string(msg))
 			processMessage(msg)
 		case <-stopChan:
 			return

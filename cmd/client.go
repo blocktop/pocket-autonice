@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	"github.com/blocktop/pocket-autonice/client"
 
 	"github.com/spf13/cobra"
 )
@@ -16,7 +16,7 @@ of the corresponding blockchain (if any) and maintain a timer to revert
 the "niceness" after a period of no relays being received.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("client called")
+		client.Start()
 	},
 }
 
