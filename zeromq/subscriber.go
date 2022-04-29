@@ -39,6 +39,7 @@ func (s *Subscriber) receiveMessages() {
 			log.Debug("exiting message receiver")
 			return
 		case data := <-s.channeler.RecvChan:
+			log.Debugf("received %#v", data)
 			if len(data) > 1 {
 				msg := data[len(data)-1]
 				s.out <- msg
