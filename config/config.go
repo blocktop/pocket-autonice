@@ -65,7 +65,17 @@ func InitConfig() {
 	log.SetLevel(level)
 
 	logJson := viper.GetBool(LogFormatJSON)
+	var logFormatter log.Formatter
 	if logJson {
-		log.SetFormatter(&log.JSONFormatter{})
+		customFormatter := &log.JSONFormatter{}
+		logFormatter = customFormatter
+		customFormatter.TimestampFormat = "2006-01-02 15:04:05"
+	} else {
+		customFormatter := &log.TextFormatter{}
+		logFormatter = customFormatter
+		customFormatter.TimestampFormat = "2006-01-02 15:04:05"
+		customFormatter.FullTimestamp = true
+		customFormatter.PadLevelText = true
 	}
+	log.SetFormatter(logFormatter)
 }

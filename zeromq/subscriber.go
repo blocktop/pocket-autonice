@@ -1,6 +1,7 @@
 package zeromq
 
 import (
+	log "github.com/sirupsen/logrus"
 	"github.com/zeromq/goczmq"
 )
 
@@ -14,7 +15,7 @@ type Subscriber struct {
 func NewSubscriber(topic string, messageChan chan<- []byte) *Subscriber {
 	return &Subscriber{
 		topic:    topic,
-		stopChan: make(chan bool),
+		stopChan: make(chan bool, 1),
 		out:      messageChan,
 	}
 }
@@ -34,13 +35,14 @@ func (s *Subscriber) Start() {
 func (s *Subscriber) receiveMessages() {
 	for {
 		select {
+		case <-s.stopChan:
+			log.Debug("exiting message receiver")
+			return
 		case data := <-s.channeler.RecvChan:
 			if len(data) > 1 {
 				msg := data[len(data)-1]
 				s.out <- msg
 			}
-		case <-s.stopChan:
-			return
 		}
 	}
 }

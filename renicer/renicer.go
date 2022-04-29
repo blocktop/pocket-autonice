@@ -141,6 +141,7 @@ func awaitStop() {
 
 	<-sigs
 
+	log.Info("reverting nice to 0 on all chains")
 	for _, rn := range renicers {
 		if rn.cancel != nil {
 			rn.cancel()

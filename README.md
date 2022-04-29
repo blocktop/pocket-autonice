@@ -4,14 +4,12 @@
 
 ## Dependencies
 
-### Nodejs
-Digital Ocean has a [guide](https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-20-04) 
-that works well.
+### ZeroMQ required development libraries and build tools
 
-Native build tools are also needed to insstall zeromq.
+Install zeromq dependencies from the system package manager. For example on Ubuntu 20.04:
 
-```sh
-apt install -y gcc g++ make
+```shell
+apt install -y libtool pkg-config gcc g++ make libsodium-dev libczmq-dev
 ```
 
 ## Installation

@@ -111,6 +111,7 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// boost pocket too
+	log.Debug("publishing message 0001")
 	if err = publisher.Publish([]byte("0001"), pubsubTopic); err != nil {
 		log.Errorf("failed to publish 0001 from %s: %s", uri, err)
 		w.Write([]byte("failed to publish"))

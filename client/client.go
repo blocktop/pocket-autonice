@@ -39,11 +39,12 @@ func Start() {
 func processMessages(messageChan chan []byte, stopChan chan bool) {
 	for {
 		select {
+		case <-stopChan:
+			log.Debug("exiting client loop")
+			return
 		case msg := <-messageChan:
 			log.Debugf("consumer received message %s", string(msg))
 			processMessage(msg)
-		case <-stopChan:
-			return
 		}
 	}
 }
