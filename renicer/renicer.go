@@ -8,18 +8,16 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"os"
 	"os/exec"
-	"os/signal"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 )
 
 var (
 	renicers    = make(map[string]*renicer)
 	revertDelay = time.Duration(viper.GetInt(config.NiceRevertDelayMinutes)) * time.Minute
+	initialized = false
 )
 
 type renicer struct {
@@ -27,13 +25,16 @@ type renicer struct {
 	cancel context.CancelFunc
 	user   string
 	chain  string
+	dryRun bool
 }
 
-func init() {
-	go awaitStop()
-}
+func Renice(ctx context.Context, chainID string) {
+	dryRun := viper.GetBool("dry_run")
+	if !initialized {
+		initialized = true
+		go awaitStop(ctx, dryRun)
+	}
 
-func Renice(chainID string) {
 	chainID = strings.ToUpper(chainID)
 	user := getUserForChainID(chainID)
 	if user == nil {
@@ -43,8 +44,9 @@ func Renice(chainID string) {
 	rn, ok := renicers[chainID]
 	if !ok {
 		rn := &renicer{
-			user:  *user,
-			chain: chainID,
+			user:   *user,
+			chain:  chainID,
+			dryRun: dryRun,
 		}
 		renicers[chainID] = rn
 	}
@@ -92,7 +94,11 @@ func (rn *renicer) renice() {
 	}
 
 	niceValue := viper.GetInt(config.NiceValue)
-	log.Infof("renicing chain %s (%s) to %d", rn.chain, rn.user, niceValue)
+	renicing := "renicing"
+	if rn.dryRun {
+		renicing = "[DRY RUN] would renice"
+	}
+	log.Infof("%s chain %s (%s) to %d", renicing, rn.chain, rn.user, niceValue)
 	if err := rn.runRenice(niceValue); err != nil {
 		log.Errorf("failed to renice %s user for relay chain %s: %s", rn.user, rn.chain, err)
 		rn.cancel()
@@ -114,13 +120,21 @@ func (rn *renicer) waitForTimeout() {
 }
 
 func (rn *renicer) revertNice() {
-	log.Infof("reverting niceness of chain %s (%s)) to 0", rn.chain, rn.user)
+	reverting := "reverting"
+	if rn.dryRun {
+		reverting = "[DRY RUN] would revert"
+	}
+	log.Infof("%s niceness of chain %s (%s)) to 0", reverting, rn.chain, rn.user)
 	if err := rn.runRenice(0); err != nil {
 		log.Errorf("failed to revert niceness of user %s for chain %s: %s", rn.user, rn.chain, err)
 	}
 }
 
 func (rn *renicer) runRenice(value int) error {
+	if viper.GetBool("dry_run") {
+		return nil
+	}
+
 	strValue := strconv.Itoa(value)
 	cmd := exec.Command("renice", "-n", strValue, "-u", rn.user)
 	if err := cmd.Run(); err != nil {
@@ -135,13 +149,14 @@ func (rn *renicer) runRenice(value int) error {
 	return nil
 }
 
-func awaitStop() {
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+func awaitStop(ctx context.Context, dryRun bool) {
+	<-ctx.Done()
 
-	<-sigs
-
-	log.Info("reverting nice to 0 on all chains")
+	reverting := "reverting"
+	if dryRun {
+		reverting = "[DRY RUN] would revert"
+	}
+	log.Infof("%s nice to 0 on all chains", reverting)
 	for _, rn := range renicers {
 		if rn.cancel != nil {
 			rn.cancel()

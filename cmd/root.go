@@ -17,11 +17,22 @@ var rootCmd = &cobra.Command{
 to boost the CPU priority of the pocket process and the blockchain
 process when they are serving relays.
 
-There are two parts to this project. An http server runs on the pocket node
-to listen for new relay requests via an nginx "mirror". A client process
-receives messages from the server when relay requests are received.
+There are two parts to this project. A prometheus poller that monitors the
+prometheus output of pocket-core for relay requests. And a client process
+receives messages from the poller when relay requests are received.
 These messages identify which blockchain is the target of the relays
 so that its "niceness" can be boosted.
+
+Both parts of the process run in the same process, but the poller is not
+required on blockchain nodes that are not running pocket-core. So for
+blockchain nodes start just the client:
+
+   autonice client
+
+and for nodes that are running pocket-core as well as optionally running
+blockchain nodes start the client and the poller:
+
+   autonice client --withPoller
 `,
 }
 

@@ -1,0 +1,114 @@
+package prometheusPoller
+
+import (
+	"context"
+	"fmt"
+	"github.com/blocktop/pocket-autonice/config"
+	"github.com/blocktop/pocket-autonice/zeromq"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"io/ioutil"
+	"net/http"
+	"regexp"
+	"strconv"
+	"time"
+)
+
+var (
+	publisher   *zeromq.Publisher
+	pubsubTopic string
+	metricsUrl  string
+	relayCounts = make(map[string]int)
+	re          = regexp.MustCompile(`pocketcore_service_relay_count_for_([0-9A-F]{4}) (\d+)`) // ([0-9A-Z]{4}) (\d+)`)
+)
+
+func Start(ctx context.Context) {
+	pubsubTopic = viper.GetString(config.PubSubTopic)
+	publisher = zeromq.NewPublisher()
+	defer publisher.Close()
+
+	metricsUrl = fmt.Sprintf("http://127.0.0.1:%d/metrics", viper.GetInt(config.PrometheusPort))
+
+	log.Infof("starting prometheus poller with metrics URL: %s", metricsUrl)
+
+	ticker := time.NewTicker(5 * time.Second)
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.Info("stopping prometheus poller")
+			return
+		case <-ticker.C:
+			poll()
+		}
+	}
+}
+
+func poll() {
+	res, err := http.Get(metricsUrl)
+	if err != nil {
+		log.Errorf("failed to get metrics from prometheus server: %s", err)
+		return
+	}
+	if res.StatusCode != 200 {
+		log.Errorf("prometheus server returned status %d %s", res.StatusCode, res.Status)
+		return
+	}
+
+	defer res.Body.Close()
+	data, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Errorf("failed to read metrics response body: %s", err)
+		return
+	}
+
+	messageChains := processPollData(data)
+	publish(messageChains)
+}
+
+func processPollData(data []byte) []string {
+	matches := re.FindAllStringSubmatch(string(data), -1)
+	if len(matches) == 0 {
+		return nil
+	}
+
+	var messageChains []string
+	for _, m := range matches {
+		if len(m) < 3 {
+			continue
+		}
+		chainID := m[1]
+		relayCountStr := m[2]
+		relayCount, err := strconv.Atoi(relayCountStr)
+		if err != nil {
+			return nil
+		}
+
+		if existingCount, ok := relayCounts[chainID]; ok {
+			if existingCount != relayCount {
+				relayCounts[chainID] = relayCount
+				messageChains = append(messageChains, chainID)
+			}
+		} else {
+			log.Infof("poller now watching chain %s", chainID)
+			relayCounts[chainID] = relayCount
+		}
+	}
+	return messageChains
+}
+
+func publish(messageChains []string) {
+	for _, chainID := range messageChains {
+		log.Debugf("publishing message %s", chainID)
+		if err := publisher.Publish([]byte(chainID), pubsubTopic); err != nil {
+			log.Errorf("failed to publish %s: %s", chainID, err)
+			return
+		}
+	}
+	// boost pocket too
+	log.Debug("publishing message 0001")
+	if err := publisher.Publish([]byte("0001"), pubsubTopic); err != nil {
+		log.Errorf("failed to publish 0001: %s", err)
+		return
+	}
+}

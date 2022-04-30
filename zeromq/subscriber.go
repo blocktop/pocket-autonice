@@ -1,22 +1,23 @@
 package zeromq
 
 import (
+	"context"
 	log "github.com/sirupsen/logrus"
 	"github.com/zeromq/goczmq"
 )
 
 type Subscriber struct {
 	channeler *goczmq.Channeler
-	stopChan  chan bool
 	topic     string
 	out       chan<- []byte
+	ctx       context.Context
+	cancel    context.CancelFunc
 }
 
 func NewSubscriber(topic string, messageChan chan<- []byte) *Subscriber {
 	return &Subscriber{
-		topic:    topic,
-		stopChan: make(chan bool, 1),
-		out:      messageChan,
+		topic: topic,
+		out:   messageChan,
 	}
 }
 
@@ -29,13 +30,15 @@ func (s *Subscriber) Start() {
 	ch := goczmq.NewSubChanneler(endpoint, s.topic)
 	s.channeler = ch
 
+	s.ctx, s.cancel = context.WithCancel(context.Background())
+
 	go s.receiveMessages()
 }
 
 func (s *Subscriber) receiveMessages() {
 	for {
 		select {
-		case <-s.stopChan:
+		case <-s.ctx.Done():
 			log.Debug("exiting message receiver")
 			return
 		case data := <-s.channeler.RecvChan:
@@ -49,7 +52,7 @@ func (s *Subscriber) receiveMessages() {
 }
 
 func (s *Subscriber) Close() {
-	s.stopChan <- true
+	s.cancel()
 	if s.channeler != nil {
 		s.channeler.Destroy()
 		s.channeler = nil

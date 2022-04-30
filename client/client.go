@@ -1,57 +1,49 @@
 package client
 
 import (
+	"context"
 	"github.com/blocktop/pocket-autonice/config"
 	"github.com/blocktop/pocket-autonice/renicer"
 	"github.com/blocktop/pocket-autonice/zeromq"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 var (
 	subscriber *zeromq.Subscriber
 )
 
-func Start() {
+func Start(ctx context.Context) {
 	pubsubTopic := viper.GetString(config.PubSubTopic)
 	messageChan := make(chan []byte, 256)
 	subscriber = zeromq.NewSubscriber(pubsubTopic, messageChan)
 	defer subscriber.Close()
 
-	stopChan := make(chan bool)
-
 	log.Info("starting message consumer")
 
-	go processMessages(messageChan, stopChan)
+	go processMessages(ctx, messageChan)
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	<-sigs
+	<-ctx.Done()
 
 	log.Info("stopping message consumer")
-	stopChan <- true
 }
 
-func processMessages(messageChan chan []byte, stopChan chan bool) {
+func processMessages(ctx context.Context, messageChan chan []byte) {
 	for {
 		select {
-		case <-stopChan:
+		case <-ctx.Done():
 			log.Debug("exiting client loop")
 			return
 		case msg := <-messageChan:
 			log.Debugf("consumer received message %s", string(msg))
-			processMessage(msg)
+			processMessage(ctx, msg)
 		}
 	}
 }
 
-func processMessage(msg []byte) {
+func processMessage(ctx context.Context, msg []byte) {
 	if len(msg) != 4 {
 		return
 	}
-	renicer.Renice(string(msg))
+	renicer.Renice(ctx, string(msg))
 }

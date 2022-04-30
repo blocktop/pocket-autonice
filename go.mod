@@ -32,6 +32,7 @@ require (
 
 require (
 	github.com/nxadm/tail v1.4.8 // indirect
+	github.com/prometheus/client_golang v1.12.1 // indirect
 	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )

@@ -10,12 +10,11 @@ import (
 const (
 	LogLevel               = "log_level"
 	LogFormatJSON          = "log_format_json"
-	OpMode                 = "op_mode"
 	NiceValue              = "nice_value"
 	NiceRevertDelayMinutes = "nice_revert_delay_minutes"
 	ZeroMQAddress          = "zeromq_address"
 	PubSubTopic            = "pubsub_topic"
-	ServerPort             = "server_port"
+	PrometheusPort         = "prometheus_port"
 )
 
 func InitConfig() {
@@ -26,12 +25,11 @@ func InitConfig() {
 
 	viper.SetDefault(LogLevel, "info")
 	viper.SetDefault(LogFormatJSON, false)
-	viper.SetDefault(OpMode, "NOP")
 	viper.SetDefault(NiceValue, -10)
 	viper.SetDefault(NiceRevertDelayMinutes, 5)
 	viper.SetDefault(ZeroMQAddress, "127.0.0.1:5555")
 	viper.SetDefault(PubSubTopic, "pocket-autonice")
-	viper.SetDefault(ServerPort, 8822)
+	viper.SetDefault(PrometheusPort, 8083)
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
