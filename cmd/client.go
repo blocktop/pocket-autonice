@@ -41,7 +41,7 @@ the "niceness" after a period of no relays being received.
 
 func init() {
 	rootCmd.AddCommand(clientCmd)
-	clientCmd.Flags().BoolVar(&poller, "withPoller", false, `starts the client and the prometheus poller
+	clientCmd.Flags().BoolVar(&poller, "with-poller", false, `starts the client and the prometheus poller
 (use on the server that is running pocket-core)`)
 	clientCmd.Flags().BoolVar(&dryRun, "dry-run", false, `runs all functionality except renicing processes`)
 	// Here you will define your flags and configuration settings.

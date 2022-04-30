@@ -30,9 +30,6 @@
 # then this value can can be left as localhost.
 # zeromq_address: 127.0.0.1:5555
 
-# The pub/sub topic is arbitrary, but if it needs to be can be changed here.
-# pubsub_topic: pocket-autonice
-
 # When a blockchain is receiving relays, the Linux user that it is running
 # under will be upgraded to this nice value.
 # nice_value: -10
