@@ -17,11 +17,9 @@ const (
 	PrometheusPort         = "prometheus_port"
 )
 
+// InitConfig initializes the configuration for the CLI. See documentation.
+// Use the dump-config command to generate a config.yaml file.
 func InitConfig() {
-	// set chain config in environment variables to identify which Linux user each chain is running under
-	// export AUTONICE_0009=polygon
-	// export AUTONICE_0021=geth
-	// etc..
 
 	viper.SetDefault(LogLevel, "info")
 	viper.SetDefault(LogFormatJSON, false)

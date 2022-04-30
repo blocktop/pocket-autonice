@@ -32,7 +32,7 @@ var getNiceCmd = &cobra.Command{
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}
-		user := viper.GetString(chainID)
+		user := viper.GetString(fmt.Sprintf("chains_%s", chainID))
 		fmt.Printf("Chain %s (%s) niceness: %d\n", chainID, user, nice)
 	},
 }

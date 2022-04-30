@@ -170,6 +170,6 @@ func getUserForChainID(chainID string) *string {
 		return nil
 	}
 
-	user := viper.GetString(chainID)
+	user := viper.GetString(fmt.Sprintf("chains_%s", chainID))
 	return &user
 }

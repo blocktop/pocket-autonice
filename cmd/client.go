@@ -18,9 +18,9 @@ var dryRun bool
 var clientCmd = &cobra.Command{
 	Use:   "client",
 	Short: "Runs the client that receives notice of relays from the poller.",
-	Long: `The client receives a message from the serve containing the chain ID
-of each relay request. The client's responsibility is to boost the "nice"
-of the corresponding blockchain (if any) and maintain a timer to revert
+	Long: `The client receives a message from the poller via zeromq containing
+the chain ID of each relay request. The client's responsibility is to boost the
+"nice" of the corresponding blockchain (if any) and maintain a timer to revert
 the "niceness" after a period of no relays being received.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -41,8 +41,9 @@ the "niceness" after a period of no relays being received.
 
 func init() {
 	rootCmd.AddCommand(clientCmd)
-	clientCmd.Flags().BoolVar(&poller, "withPoller", false, "starts the client and the prometheus poller")
-	clientCmd.Flags().BoolVar(&dryRun, "dry-run", false, "runs all functionality except renicing processes")
+	clientCmd.Flags().BoolVar(&poller, "withPoller", false, `starts the client and the prometheus poller
+(use on the server that is running pocket-core)`)
+	clientCmd.Flags().BoolVar(&dryRun, "dry-run", false, `runs all functionality except renicing processes`)
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

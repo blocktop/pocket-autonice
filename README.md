@@ -24,6 +24,19 @@ npm install
 
 ## Usage
 
+### Configuration
+// set chain config in environment variables to identify which Linux user each chain is running under
+// export AUTONICE_CHAINS_0009=polygon
+// export AUTONICE_CHAINS_0021=geth
+// etc..
+// In the config.yaml file this would be:
+// ```yaml
+// chains:
+//   0009: polygon
+//   0021: geth
+//
+
+
 There are two processes in pocket-autorenice, a client and a server. Run the client on all servers as
 a privileged user. This user will need to be able to execute the `renice` program.
 

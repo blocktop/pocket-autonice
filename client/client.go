@@ -19,7 +19,7 @@ func Start(ctx context.Context) {
 	subscriber = zeromq.NewSubscriber(pubsubTopic, messageChan)
 	defer subscriber.Close()
 
-	log.Info("starting message consumer")
+	log.Infof("starting message consumer on %s", viper.GetString(config.ZeroMQAddress))
 
 	go processMessages(ctx, messageChan)
 
