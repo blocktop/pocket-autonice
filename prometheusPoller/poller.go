@@ -90,7 +90,7 @@ func processPollData(data []byte) []string {
 				messageChains = append(messageChains, chainID)
 			}
 		} else {
-			log.Infof("poller now watching chain %s", chainID)
+			log.Infof("poller found chain %s", chainID)
 			relayCounts[chainID] = relayCount
 		}
 	}
