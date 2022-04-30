@@ -87,7 +87,9 @@ const configExample = `# Place the config.yaml file in either the $HOME/.pocket-
 # pubsub_topic: pocket-autonice
 
 # When a blockchain is receiving relays, the Linux user that it is running
-# under will be upgraded to this nice value.
+# under will be upgraded to this nice value. Zero is normal, negative values
+# boost priority. The max boost is at -20, though that is not recommended
+# as the blockchain would then compete with essential kernel services.
 # nice_value: -10
 
 # Once the blockchain stops receiving relays, the client will wait for this

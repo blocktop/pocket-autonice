@@ -3,15 +3,16 @@ package prometheusPoller
 import (
 	"context"
 	"fmt"
-	"github.com/blocktop/pocket-autonice/config"
-	"github.com/blocktop/pocket-autonice/zeromq"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/blocktop/pocket-autonice/config"
+	"github.com/blocktop/pocket-autonice/zeromq"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -98,17 +99,23 @@ func processPollData(data []byte) []string {
 }
 
 func publish(messageChains []string) {
+	var has0001 bool
 	for _, chainID := range messageChains {
-		log.Debugf("publishing message %s", chainID)
+		if chainID == "0001" {
+			has0001 = true
+		}
+		log.Infof("poller publishing message %s", chainID)
 		if err := publisher.Publish([]byte(chainID), pubsubTopic); err != nil {
 			log.Errorf("failed to publish %s: %s", chainID, err)
 			return
 		}
 	}
-	// boost pocket too
-	log.Debug("publishing message 0001")
-	if err := publisher.Publish([]byte("0001"), pubsubTopic); err != nil {
-		log.Errorf("failed to publish 0001: %s", err)
-		return
+	if len(messageChains) > 0 && !has0001 {
+		// boost pocket too
+		log.Debug("publishing message 0001")
+		if err := publisher.Publish([]byte("0001"), pubsubTopic); err != nil {
+			log.Errorf("failed to publish 0001: %s", err)
+			return
+		}
 	}
 }
