@@ -33,13 +33,17 @@ func InitConfig() {
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("/etc/pocket-autonice")
 	viper.AddConfigPath("$HOME/.pocket-autonice")
+
+	viper.SetEnvPrefix("AUTONICE")
+	viper.AutomaticEnv()
+
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			panic(fmt.Errorf("fatal error reading config file: %w \n", err))
+		} else {
+			log.Infof("using config file %s", viper.ConfigFileUsed())
 		}
 	}
-	viper.SetEnvPrefix("AUTONICE")
-	viper.AutomaticEnv()
 
 	var level log.Level
 	switch strings.ToLower(viper.GetString(LogLevel)) {
