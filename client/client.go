@@ -18,6 +18,7 @@ func Start(ctx context.Context) {
 	messageChan := make(chan []byte, 256)
 	subscriber = zeromq.NewSubscriber(pubsubTopic, messageChan)
 	defer subscriber.Close()
+	subscriber.Start()
 
 	log.Infof("starting message consumer on %s", viper.GetString(config.ZeroMQAddress))
 
