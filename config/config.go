@@ -37,6 +37,7 @@ func InitConfig() {
 	viper.SetEnvPrefix("AUTONICE")
 	viper.AutomaticEnv()
 
+	log.Info("initializing config")
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			panic(fmt.Errorf("fatal error reading config file: %w \n", err))
