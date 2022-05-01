@@ -37,15 +37,22 @@ func InitConfig() {
 	viper.SetEnvPrefix("AUTONICE")
 	viper.AutomaticEnv()
 
-	log.Info("initializing config")
+	var readFromFile bool
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			panic(fmt.Errorf("fatal error reading config file: %w \n", err))
 		}
 	} else {
-		log.Infof("using config file %s", viper.ConfigFileUsed())
+		readFromFile = true
 	}
-	viper.Debug()
+
+	if readFromFile {
+		chains := viper.GetStringMapString("chains")
+		for chainID, user := range chains {
+			viper.Set(chainID, user)
+		}
+	}
+
 	var level log.Level
 	switch strings.ToLower(viper.GetString(LogLevel)) {
 	case "panic":
@@ -97,9 +104,9 @@ const ConfigExample = `# Place the config.yaml file in either the $HOME/.pocket-
 # also be configured by setting environment variables such as
 # AUTONICE_CHAINS_0021.
 # chains:
-#   0001: pocket  # enables pocket renice during all relay sessions'
-#   0005: fuse
-#   0009: polygon
+#   "0001": pocket  # enables pocket renice during all relay sessions'
+#   "0005": fuse
+#   "0009": polygon
 #   etc...
 
 
