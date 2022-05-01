@@ -43,7 +43,7 @@ func Renice(ctx context.Context, chainID string) {
 
 	rn, ok := renicers[chainID]
 	if !ok {
-		rn := &renicer{
+		rn = &renicer{
 			user:   *user,
 			chain:  chainID,
 			dryRun: dryRun,

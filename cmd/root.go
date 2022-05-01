@@ -19,7 +19,7 @@ var cfgFile string
 var dryRun bool
 var poller bool
 var rootCmd = &cobra.Command{
-	Use:   "client",
+	Use:   "autonice",
 	Short: "Runs the autonice service.",
 	Long: `The autonice service receives a message from the poller via zeromq containing
 the chain ID of each relay request. The service boosts the "nice" of the
