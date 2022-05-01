@@ -2,7 +2,10 @@ package zeromq
 
 import (
 	"context"
+	"fmt"
+	"github.com/blocktop/pocket-autonice/config"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"github.com/zeromq/goczmq"
 	"time"
 )
@@ -27,7 +30,7 @@ func (s *Subscriber) Start() {
 		return
 	}
 
-	endpoint := getTCPEndpoint()
+	endpoint := getSubscriberEndpoint()
 	ch := goczmq.NewSubChanneler(endpoint, s.topic)
 	s.channeler = ch
 
@@ -62,4 +65,8 @@ func (s *Subscriber) Close() {
 		s.channeler.Destroy()
 		s.channeler = nil
 	}
+}
+
+func getSubscriberEndpoint() string {
+	return fmt.Sprintf("tcp://%s", viper.GetString(config.SubscriberAddress))
 }

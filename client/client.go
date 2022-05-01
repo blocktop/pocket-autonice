@@ -20,7 +20,7 @@ func Start(ctx context.Context) {
 	defer subscriber.Close()
 	subscriber.Start()
 
-	log.Infof("starting message consumer on %s", viper.GetString(config.ZeroMQAddress))
+	log.Infof("starting message consumer on %s", viper.GetString(config.SubscriberAddress))
 
 	go processMessages(ctx, messageChan)
 

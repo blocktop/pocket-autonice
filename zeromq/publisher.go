@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/zeromq/goczmq"
+	"strings"
 	"time"
 )
 
@@ -32,8 +33,8 @@ func (p *Publisher) Publish(msg []byte, topic string) error {
 }
 
 func (p *Publisher) createSock() error {
-	endpoint := getTCPEndpoint()
-	sock, err := goczmq.NewPub(endpoint)
+	endpoints := getPublisherEndpoints()
+	sock, err := goczmq.NewPub(endpoints)
 	if err != nil {
 		return err
 	}
@@ -53,8 +54,12 @@ func (p *Publisher) Close() {
 	}
 }
 
-func getTCPEndpoint() string {
-	return fmt.Sprintf("tcp://%s", viper.GetString(config.ZeroMQAddress))
+func getPublisherEndpoints() string {
+	endpoints := viper.GetStringSlice(config.PublishToEndpoints)
+	for i, e := range endpoints {
+		endpoints[i] = fmt.Sprintf("tcp://%s", e)
+	}
+	return strings.Join(endpoints, ",")
 }
 
 func makePubMessage(msg []byte, topic string) [][]byte {
