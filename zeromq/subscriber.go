@@ -46,10 +46,8 @@ func (s *Subscriber) receiveMessages() {
 			return
 		case <-ticker.C:
 			// ensure subscription in case publisher stops and restarts
-			log.Debug("resub")
 			s.channeler.Subscribe(s.topic)
 		case data := <-s.channeler.RecvChan:
-			log.Debugf("received %#v", data)
 			if len(data) > 1 {
 				msg := data[len(data)-1]
 				s.out <- msg
