@@ -166,11 +166,9 @@ func awaitStop(ctx context.Context, dryRun bool) {
 }
 
 func getUserForChainID(chainID string) *string {
-	key := fmt.Sprintf("chains_%s", chainID)
-	if !viper.IsSet(key) {
-		return nil
+	chains := viper.GetStringMapString(config.Chains)
+	if user, ok := chains[chainID]; ok {
+		return &user
 	}
-
-	user := viper.GetString(key)
-	return &user
+	return nil
 }

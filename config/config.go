@@ -15,6 +15,7 @@ const (
 	ZeroMQAddress          = "zeromq_address"
 	PubSubTopic            = "pubsub_topic"
 	PrometheusPort         = "prometheus_port"
+	Chains                 = "chains"
 )
 
 // InitConfig initializes the configuration for the CLI. See documentation.
@@ -37,19 +38,9 @@ func InitConfig() {
 	viper.SetEnvPrefix("AUTONICE")
 	viper.AutomaticEnv()
 
-	var readFromFile bool
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			panic(fmt.Errorf("fatal error reading config file: %w \n", err))
-		}
-	} else {
-		readFromFile = true
-	}
-
-	if readFromFile {
-		chains := viper.GetStringMapString("chains")
-		for chainID, user := range chains {
-			viper.Set(chainID, user)
 		}
 	}
 
@@ -100,9 +91,7 @@ const ConfigExample = `# Place the config.yaml file in either the $HOME/.pocket-
 # not use 'root' as a user here as the renice is done at the user level.
 # Boosting the nice of root may have unintended consequences on server
 # performance. NOTE: by default NO CHAINS are configured and so no processes
-# would be reniced by default. Thus this configuration is mandatory. Chains can
-# also be configured by setting environment variables such as
-# AUTONICE_CHAINS_0021.
+# would be reniced by default. Thus this configuration is mandatory.
 # chains:
 #   "0001": pocket  # enables pocket renice during all relay sessions'
 #   "0005": fuse
