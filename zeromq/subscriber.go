@@ -28,8 +28,7 @@ func (s *Subscriber) Start() {
 	}
 
 	endpoint := getTCPEndpoint()
-	ch := goczmq.NewXSubChanneler(endpoint)
-	ch.SendChan <- [][]byte{{1}, []byte(s.topic)}
+	ch := goczmq.NewSubChanneler(endpoint, s.topic)
 	s.channeler = ch
 
 	s.ctx, s.cancel = context.WithCancel(context.Background())
@@ -48,7 +47,7 @@ func (s *Subscriber) receiveMessages() {
 		case <-ticker.C:
 			// ensure subscription in case publisher stops and restarts
 			log.Debug("resub")
-			s.channeler.SendChan <- [][]byte{{1}, []byte(s.topic)}
+			s.channeler.Subscribe(s.topic)
 		case data := <-s.channeler.RecvChan:
 			log.Debugf("received %#v", data)
 			if len(data) > 1 {
