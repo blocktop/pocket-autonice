@@ -16,16 +16,16 @@ import (
 
 var (
 	renicers    = make(map[string]*renicer)
-	revertDelay = time.Duration(viper.GetInt(config.NiceRevertDelayMinutes)) * time.Minute
 	initialized = false
 )
 
 type renicer struct {
-	ctx    context.Context
-	cancel context.CancelFunc
-	user   string
-	chain  string
-	dryRun bool
+	ctx         context.Context
+	cancel      context.CancelFunc
+	user        string
+	chain       string
+	dryRun      bool
+	revertDelay time.Duration
 }
 
 func Renice(ctx context.Context, chainID string) {
@@ -44,9 +44,10 @@ func Renice(ctx context.Context, chainID string) {
 	rn, ok := renicers[chainID]
 	if !ok {
 		rn = &renicer{
-			user:   *user,
-			chain:  chainID,
-			dryRun: dryRun,
+			user:        *user,
+			chain:       chainID,
+			dryRun:      dryRun,
+			revertDelay: time.Duration(viper.GetInt(config.NiceRevertDelayMinutes)) * time.Minute,
 		}
 		renicers[chainID] = rn
 	}
