@@ -85,7 +85,7 @@ func GetNiceValue(chainID string) (int, error) {
 
 func (rn *renicer) renice(ctx context.Context) {
 	alreadyReniced := rn.ctx != nil
-	ctx, cancel := context.WithTimeout(ctx, revertDelay)
+	ctx, cancel := context.WithTimeout(ctx, rn.revertDelay)
 	rn.ctx = ctx
 	rn.cancel = cancel
 
@@ -100,7 +100,7 @@ func (rn *renicer) renice(ctx context.Context) {
 		renicing = "[DRY RUN] would renice"
 	}
 	log.Infof("%s chain %s (%s) to %d until %s of no activity", renicing, rn.chain, rn.user, niceValue,
-		revertDelay.String())
+		rn.revertDelay.String())
 	if err := rn.runRenice(niceValue); err != nil {
 		log.Errorf("failed to renice %s user for relay chain %s: %s", rn.user, rn.chain, err)
 		rn.cancel()
