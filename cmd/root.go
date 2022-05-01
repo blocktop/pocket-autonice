@@ -16,6 +16,8 @@ import (
 var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
+var dryRun bool
+var poller bool
 var rootCmd = &cobra.Command{
 	Use:   "client",
 	Short: "Runs the autonice service.",
@@ -58,9 +60,9 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(config.InitConfig)
-	clientCmd.Flags().BoolVar(&poller, "with-poller", false,
+	rootCmd.Flags().BoolVar(&poller, "with-poller", false,
 		`starts the client and the prometheus poller
 (use on the server that is running pocket-core)`)
-	clientCmd.Flags().BoolVar(&dryRun, "dry-run", false,
+	rootCmd.Flags().BoolVar(&dryRun, "dry-run", false,
 		`runs all functionality except renicing processes`)
 }
