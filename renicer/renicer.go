@@ -50,7 +50,7 @@ func Renice(ctx context.Context, chainID string) {
 		}
 		renicers[chainID] = rn
 	}
-	rn.renice()
+	rn.renice(ctx)
 }
 
 func GetNiceValue(chainID string) (int, error) {
@@ -82,9 +82,9 @@ func GetNiceValue(chainID string) (int, error) {
 	return nice, nil
 }
 
-func (rn *renicer) renice() {
+func (rn *renicer) renice(ctx context.Context) {
 	alreadyReniced := rn.ctx != nil
-	ctx, cancel := context.WithTimeout(context.Background(), revertDelay)
+	ctx, cancel := context.WithTimeout(ctx, revertDelay)
 	rn.ctx = ctx
 	rn.cancel = cancel
 
@@ -98,7 +98,8 @@ func (rn *renicer) renice() {
 	if rn.dryRun {
 		renicing = "[DRY RUN] would renice"
 	}
-	log.Infof("%s chain %s (%s) to %d", renicing, rn.chain, rn.user, niceValue)
+	log.Infof("%s chain %s (%s) to %d until %s of no activity", renicing, rn.chain, rn.user, niceValue,
+		revertDelay.String())
 	if err := rn.runRenice(niceValue); err != nil {
 		log.Errorf("failed to renice %s user for relay chain %s: %s", rn.user, rn.chain, err)
 		rn.cancel()
@@ -131,7 +132,7 @@ func (rn *renicer) revertNice() {
 }
 
 func (rn *renicer) runRenice(value int) error {
-	if viper.GetBool("dry_run") {
+	if rn.dryRun {
 		return nil
 	}
 

@@ -46,6 +46,8 @@ servers without changing the nice value of any process.
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 		<-sigs
+
+		println()
 	},
 }
 
