@@ -60,7 +60,14 @@ func GetNiceValue(chainID string) (int, error) {
 	if user == nil {
 		return 0, fmt.Errorf("chainID %s is not configured", chainID)
 	}
-	cmd := exec.Command("ps", "-u", *user, "-o", "ni=")
+	sudo := viper.GetBool(config.RunWithSudo)
+	cmdName := "ps"
+	args := []string{"-u", *user, "-o", "ni="}
+	if sudo {
+		cmdName = "sudo"
+		args = append([]string{"ps"}, args...)
+	}
+	cmd := exec.Command(cmdName, args...)
 	var outData bytes.Buffer
 	cmd.Stdout = &outData
 
@@ -138,7 +145,14 @@ func (rn *renicer) runRenice(value int) error {
 	}
 
 	strValue := strconv.Itoa(value)
-	cmd := exec.Command("renice", "-n", strValue, "-u", rn.user)
+	sudo := viper.GetBool(config.RunWithSudo)
+	cmdName := "renice"
+	args := []string{"-n", strValue, "-u", rn.user}
+	if sudo {
+		cmdName = "sudo"
+		args = append([]string{"renice"}, args...)
+	}
+	cmd := exec.Command(cmdName, args...)
 	if err := cmd.Run(); err != nil {
 		output, err2 := cmd.CombinedOutput()
 		if err2 != nil {

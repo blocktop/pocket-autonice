@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/blocktop/pocket-autonice/config"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -35,6 +36,7 @@ var dumpConfigCmd = &cobra.Command{
 		if _, err := file.WriteString(config.ConfigExample); err != nil {
 			log.Fatalf("failed to write example config file: %s", err)
 		}
+		fmt.Printf("Example config generated at: %s", configFile)
 	},
 }
 

@@ -16,6 +16,7 @@ const (
 	PublishToEndpoints     = "publisher_endpoints"
 	PubSubTopic            = "pubsub_topic"
 	PrometheusPort         = "prometheus_port"
+	RunWithSudo            = "run_with_sudo"
 	Chains                 = "chains"
 )
 
@@ -31,6 +32,7 @@ func InitConfig() {
 	viper.SetDefault(PublishToEndpoints, []string{"127.0.0.1:5555"})
 	viper.SetDefault(PubSubTopic, "pocket-autonice")
 	viper.SetDefault(PrometheusPort, 8083)
+	viper.SetDefault(RunWithSudo, false)
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
@@ -87,6 +89,10 @@ const ConfigExample = `# Place the config.yaml file in either the $HOME/.pocket-
 # All config values can be set with environment variables with precedence
 # over this file by prefixing the uppercase key with "AUTONICE_".
 # For example AUTONICE_LOG_LEVEL will set the log level.
+
+# Autonice runs the Linux 'renice' command which is privileged. The program must
+# either be run as root or with sudo.
+# run_with_sudo: false
 
 # For each blockchain running on the server, add a map from the relay network
 # ID or chain ID to the Linux user under with that blockchain is running. Do
