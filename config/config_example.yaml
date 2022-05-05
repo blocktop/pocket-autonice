@@ -5,6 +5,10 @@
 # over this file by prefixing the uppercase key with "AUTONICE_".
 # For example AUTONICE_LOG_LEVEL will set the log level.
 
+# Autonice runs the Linux 'renice' command which is privileged. The program must
+# either be run as root or with sudo.
+# run_with_sudo: false
+
 # For each blockchain running on the server, add a map from the relay network
 # ID or chain ID to the Linux user under with that blockchain is running. Do
 # not use 'root' as a user here as the renice is done at the user level.

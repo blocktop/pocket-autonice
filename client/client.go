@@ -43,6 +43,9 @@ func processMessages(ctx context.Context, messageChan chan []byte) {
 }
 
 func processMessage(ctx context.Context, msg []byte) {
+	if string(msg) == "ping" {
+		log.Info("consumer received ping")
+	}
 	if len(msg) != 4 {
 		return
 	}

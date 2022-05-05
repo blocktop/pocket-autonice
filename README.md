@@ -6,9 +6,9 @@ that aim by boosting the priority of the pocket and the relay chain processes wh
 
 ## Requirements
 
-The program uses the Linux `renice` command to boost the processes of *the user* under which the pocket and relay chain
-processes are running. Why not use the specific pids of the pocket and relay chian processes? That would require
-reconfiguring `pocket-autonice` everytime a process was restarted and receives a new pid. 
+Pocket-autonice uses the Linux `renice` command to boost the processes of *the user* under which the pocket and relay 
+chain processes are running. Why not use the specific pids of the pocket and relay chian processes? That would require
+reconfiguring pocket-autonice everytime a process was restarted and receives a new pid. 
 
 So that means that the pocket and relay chain processes must each be running under a different Linux user. For services
 running under `systemd`, the user can be set with
@@ -142,6 +142,27 @@ On all other servers:
 
 ```shell
 pocket-autonice
+```
+
+### Running pocket-autonice with systemd
+
+To run pocket-autonice automatically upon server startup add a pocket-autonice.service to systemd.
+
+Save the following as `/etc/systemd/system/pocket-autonice.service`:
+
+```
+[Unit]
+Description=Pocket Autonice
+After=network.target
+
+[Service]
+ExecStart=<full path to pocket-autonice>
+Restart=on-failure
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target
 ```
 
 ## Testing

@@ -36,7 +36,7 @@ var dumpConfigCmd = &cobra.Command{
 		if _, err := file.WriteString(config.ConfigExample); err != nil {
 			log.Fatalf("failed to write example config file: %s", err)
 		}
-		fmt.Printf("Example config generated at: %s", configFile)
+		fmt.Printf("Example config generated at: %s\n", configFile)
 	},
 }
 
