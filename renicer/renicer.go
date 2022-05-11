@@ -38,6 +38,7 @@ func Renice(ctx context.Context, chainID string) {
 	chainID = strings.ToUpper(chainID)
 	user := getUserForChainID(chainID)
 	if user == nil {
+		log.Debugf("chain %s not configured; ignoring", chainID)
 		return
 	}
 

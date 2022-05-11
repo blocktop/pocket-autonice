@@ -83,6 +83,7 @@ func (s *Subscriber) receiveMessages() {
 }
 
 func (s *Subscriber) receiveMessagesChan() {
+	ticker := time.NewTicker(time.Minute)
 	for {
 		select {
 		case <-s.ctx.Done():
@@ -91,6 +92,8 @@ func (s *Subscriber) receiveMessagesChan() {
 			return
 		case msg := <-s.receiveChan:
 			s.out <- msg
+		case <-ticker.C:
+			s.sock.SetSubscribe("ping")
 		}
 	}
 }

@@ -24,7 +24,7 @@ func Start(ctx context.Context) {
 
 	log.Infof("starting message consumer on %s", viper.GetString(config.SubscriberAddress))
 
-	go processMessages(ctx, messageChan)
+	go processMessages(ctx, messageChan, 256)
 
 	<-ctx.Done()
 
