@@ -23,9 +23,13 @@ var (
 	re          = regexp.MustCompile(`pocketcore_service_relay_count_for_([0-9A-F]{4}) (\d+)`) // ([0-9A-Z]{4}) (\d+)`)
 )
 
-func Start(ctx context.Context) {
+func Start(ctx context.Context) error {
 	pubsubTopic = viper.GetString(config.PubSubTopic)
-	publisher = zeromq.NewPublisher()
+	var err error
+	publisher, err = zeromq.NewPublisher()
+	if err != nil {
+		return err
+	}
 	defer publisher.Close()
 
 	metricsUrl = fmt.Sprintf("http://127.0.0.1:%d/metrics", viper.GetInt(config.PrometheusPort))
@@ -38,7 +42,7 @@ func Start(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			log.Info("stopping prometheus poller")
-			return
+			return nil
 		case <-ticker.C:
 			poll()
 		}
@@ -105,7 +109,7 @@ func publish(messageChains []string) {
 			has0001 = true
 		}
 		log.Infof("poller publishing message %s", chainID)
-		if err := publisher.Publish([]byte(chainID), pubsubTopic); err != nil {
+		if err := publisher.Publish(chainID, pubsubTopic); err != nil {
 			log.Errorf("failed to publish %s: %s", chainID, err)
 			return
 		}
@@ -113,7 +117,7 @@ func publish(messageChains []string) {
 	if len(messageChains) > 0 && !has0001 {
 		// boost pocket too
 		log.Debug("publishing message 0001")
-		if err := publisher.Publish([]byte("0001"), pubsubTopic); err != nil {
+		if err := publisher.Publish("0001", pubsubTopic); err != nil {
 			log.Errorf("failed to publish 0001: %s", err)
 			return
 		}

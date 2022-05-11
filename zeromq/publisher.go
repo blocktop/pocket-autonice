@@ -2,46 +2,69 @@ package zeromq
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
+	"time"
+
 	"github.com/blocktop/pocket-autonice/config"
+	zmq "github.com/pebbe/zmq4"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/zeromq/goczmq"
-	"strings"
-	"time"
 )
 
 type Publisher struct {
-	sock *goczmq.Sock
+	sock *zmq.Socket
 }
 
-func NewPublisher() *Publisher {
-	return &Publisher{}
-}
-
-func (p *Publisher) Publish(msg []byte, topic string) error {
-	if p.sock == nil {
-		if err := p.createSock(); err != nil {
-			log.Fatalf("fatal error occurred creating publisher socket: %s", err)
-		}
+func NewPublisher() (*Publisher, error) {
+	p := &Publisher{}
+	if err := p.createSock(); err != nil {
+		return nil, errors.Wrap(err, "fatal error occurred creating publisher socket")
 	}
-	data := makePubMessage(msg, topic)
-	if err := p.sock.SendMessage(data); err != nil {
-		log.Errorf("error occurred publishing message: %s", err)
+	return p, nil
+}
+
+func (p *Publisher) Publish(msg, topic string) error {
+	if p.sock == nil {
+		return fmt.Errorf("publisher socket has been closed")
+	}
+
+	_, err := p.sock.Send(topic, zmq.SNDMORE)
+	if err == nil {
+		_, err = p.sock.Send(msg, 0)
+	}
+	if err != nil {
+		err = errors.Wrap(err, "error occurred publishing message")
+		log.Errorf(err.Error())
 		return err
 	}
 	return nil
 }
 
 func (p *Publisher) createSock() error {
-	endpoints := getPublisherEndpoints()
-	sock, err := goczmq.NewPub(endpoints)
+	zctx, err := zmq.NewContext()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to create zmq context")
 	}
-	sock.SetLinger(0)
+	sock, err := zctx.NewSocket(zmq.PUB)
+	if err != nil {
+		return errors.Wrap(err, "failed to create zmq publisher socket")
+	}
+	if err = sock.SetLinger(100 * time.Millisecond); err != nil {
+		return errors.Wrap(err, "failed to set linger on zmq publisher socket")
+	}
+	if err = sock.SetHeartbeatIvl(time.Second); err != nil {
+		return errors.Wrap(err, "failed to set heartbeat interval (requires zmq >= 4.2)")
+	}
+	if err = sock.SetReconnectIvl(time.Minute); err != nil {
+		return errors.Wrap(err, "failed to set reconnect interval")
+	}
+	err = sock.Bind(fmt.Sprintf("tcp://%s", viper.GetString(config.PublisherAddress)))
+	if err != nil {
+		return errors.Wrap(err, "failed to bind zmq publisher socket")
+	}
 	p.sock = sock
 
-	// give publishers time to see the subscription
+	// give publishers time to see the subscriptions
 	time.Sleep(time.Second)
 
 	return nil
@@ -49,17 +72,9 @@ func (p *Publisher) createSock() error {
 
 func (p *Publisher) Close() {
 	if p.sock != nil {
-		p.sock.Destroy()
+		p.sock.Close()
 		p.sock = nil
 	}
-}
-
-func getPublisherEndpoints() string {
-	endpoints := viper.GetStringSlice(config.PublishToEndpoints)
-	for i, e := range endpoints {
-		endpoints[i] = fmt.Sprintf("tcp://%s", e)
-	}
-	return strings.Join(endpoints, ",")
 }
 
 func makePubMessage(msg []byte, topic string) [][]byte {

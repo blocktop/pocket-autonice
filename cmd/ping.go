@@ -21,7 +21,11 @@ var pingCmd = &cobra.Command{
 	Use:   "ping",
 	Short: "Send ping messages out to all listening autonice servers.",
 	Run: func(cmd *cobra.Command, args []string) {
-		publisher := zeromq.NewPublisher()
+		publisher, err := zeromq.NewPublisher()
+		if err != nil {
+			fmt.Printf("failed to start publisher: %s\n", err)
+			os.Exit(1)
+		}
 		defer publisher.Close()
 		topic := viper.GetString(config.PubSubTopic)
 		ticker := time.NewTicker(5 * time.Second)
@@ -34,7 +38,7 @@ var pingCmd = &cobra.Command{
 				println()
 				return
 			case <-ticker.C:
-				if err := publisher.Publish([]byte("ping"), topic); err != nil {
+				if err := publisher.Publish("ping", topic); err != nil {
 					fmt.Printf("\nfailed to publish ping: %s\n", err)
 				}
 				fmt.Printf(".")

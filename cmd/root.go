@@ -5,6 +5,7 @@ import (
 	"github.com/blocktop/pocket-autonice/client"
 	"github.com/blocktop/pocket-autonice/config"
 	"github.com/blocktop/pocket-autonice/prometheusPoller"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"os"
 	"os/signal"
@@ -38,7 +39,11 @@ servers without changing the nice value of any process.
 		defer cancel()
 		viper.Set("dry_run", dryRun)
 		if poller {
-			go prometheusPoller.Start(ctx)
+			go func() {
+				if err := prometheusPoller.Start(ctx); err != nil {
+					log.Fatalf("failed to start prometheus poller: %s", err)
+				}
+			}()
 		}
 		go client.Start(ctx)
 

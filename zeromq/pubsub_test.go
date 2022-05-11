@@ -17,7 +17,7 @@ var _ = Describe("∅MQ", func() {
 			publisher := zeromq.NewPublisher()
 			defer publisher.Close()
 
-			msgChan := make(chan []byte, 5)
+			msgChan := make(chan string, 5)
 			subscriber := zeromq.NewSubscriber(topic, msgChan)
 			defer subscriber.Close()
 			subscriber.Start()
@@ -38,7 +38,7 @@ var _ = Describe("∅MQ", func() {
 
 			i := 5
 			for i > 0 {
-				err := publisher.Publish([]byte(fmt.Sprintf("%s-%d", msg, i)), topic)
+				err := publisher.Publish(fmt.Sprintf("%s-%d", msg, i), topic)
 				Expect(err).ToNot(HaveOccurred())
 				i--
 				time.Sleep(10 * time.Millisecond)
