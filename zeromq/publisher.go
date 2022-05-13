@@ -58,8 +58,8 @@ func (p *Publisher) createSock() error {
 	if err = sock.SetReconnectIvl(time.Minute); err != nil {
 		return errors.Wrap(err, "failed to set reconnect interval")
 	}
-	err = sock.Bind(fmt.Sprintf("tcp://%s", viper.GetString(config.PublisherAddress)))
-	if err != nil {
+	endpoint := fmt.Sprintf("tcp://%s", viper.GetString(config.PublisherAddress))
+	if err = sock.Bind(endpoint); err != nil {
 		return errors.Wrap(err, "failed to bind zmq publisher socket")
 	}
 	p.sock = sock

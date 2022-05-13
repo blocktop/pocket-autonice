@@ -14,7 +14,6 @@ const (
 	NiceRevertDelayMinutes = "nice_revert_delay_minutes"
 	SubscriberAddress      = "subscriber_address"
 	PublisherAddress       = "publisher_address"
-	PubSubTopic            = "pubsub_topic"
 	PrometheusPort         = "prometheus_port"
 	RunWithSudo            = "run_with_sudo"
 	Chains                 = "chains"
@@ -29,8 +28,7 @@ func InitConfig() {
 	viper.SetDefault(NiceValue, -10)
 	viper.SetDefault(NiceRevertDelayMinutes, 5)
 	viper.SetDefault(SubscriberAddress, "127.0.0.1:5555")
-	viper.SetDefault(PublisherAddress, "*:5555")
-	viper.SetDefault(PubSubTopic, "pocket-autonice")
+	viper.SetDefault(PublisherAddress, "127.0.0.1:5555")
 	viper.SetDefault(PrometheusPort, 8083)
 	viper.SetDefault(RunWithSudo, false)
 
@@ -120,7 +118,7 @@ const ConfigExample = `# Place the config.yaml file in either the $HOME/.pocket-
 # subscriber_address: 127.0.0.1:5555
 
 # For the pocket-core server, the address to bind the zeromq publisher to.
-# publisher_address: *:5555
+# publisher_address: 127.0.0.1:5555
 
 # When a blockchain is receiving relays, the Linux user that it is running
 # under will be upgraded to this nice value. Zero is normal, negative values

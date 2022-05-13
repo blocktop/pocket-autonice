@@ -14,17 +14,23 @@ var (
 )
 
 func Start(ctx context.Context) {
-	pubsubTopic := viper.GetString(config.PubSubTopic)
+	topics := []string{"ping"}
+	chains := viper.GetStringMapString(config.Chains)
+	for chainID := range chains {
+		topics = append(topics, chainID)
+	}
+
 	messageChan := make(chan string, 256)
-	subscriber = zeromq.NewSubscriber(pubsubTopic, messageChan)
+
+	subscriber = zeromq.NewSubscriber(topics, messageChan)
 	defer subscriber.Close()
 	if err := subscriber.Start(); err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	log.Infof("starting message consumer on %s", viper.GetString(config.SubscriberAddress))
+	log.Infof("starting message consumer on %s", viper.GetString(config.PublisherAddress))
 
-	go processMessages(ctx, messageChan, 256)
+	go processMessages(ctx, messageChan)
 
 	<-ctx.Done()
 
@@ -47,8 +53,6 @@ func processMessages(ctx context.Context, messageChan chan string) {
 func processMessage(ctx context.Context, msg string) {
 	if string(msg) == "ping" {
 		log.Info("consumer received ping")
-	}
-	if len(msg) != 4 {
 		return
 	}
 	renicer.Renice(ctx, msg)

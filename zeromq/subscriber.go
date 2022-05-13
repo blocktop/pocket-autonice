@@ -13,7 +13,7 @@ import (
 
 type Subscriber struct {
 	sock        *zmq.Socket
-	topic       string
+	topics      []string
 	receiveChan chan string
 	out         chan<- string
 	ctx         context.Context
@@ -21,9 +21,9 @@ type Subscriber struct {
 	canceled    bool
 }
 
-func NewSubscriber(topic string, messageChan chan<- string) *Subscriber {
+func NewSubscriber(topics []string, messageChan chan<- string) *Subscriber {
 	return &Subscriber{
-		topic:       topic,
+		topics:      topics,
 		out:         messageChan,
 		receiveChan: make(chan string, 256),
 	}
@@ -48,11 +48,15 @@ func (s *Subscriber) Start() error {
 	if err = sock.SetReconnectIvl(time.Minute); err != nil {
 		return errors.Wrap(err, "failed to set reconnect interval on zmq subscriber socket")
 	}
-	if err = sock.Connect(fmt.Sprintf("tcp://%s", viper.GetString(config.SubscriberAddress))); err != nil {
+	endpoint := fmt.Sprintf("tcp://%s;%s", viper.GetString(config.SubscriberAddress),
+		viper.GetString(config.PublisherAddress))
+	if err = sock.Connect(endpoint); err != nil {
 		return errors.Wrap(err, "failed to connect zmq subscriber socket")
 	}
-	if err = sock.SetSubscribe(s.topic); err != nil {
-		return errors.Wrap(err, "failed to  set topic subscription")
+	for _, t := range s.topics {
+		if err = sock.SetSubscribe(t); err != nil {
+			return errors.Wrap(err, "failed to set topic subscription")
+		}
 	}
 
 	s.sock = sock

@@ -14,11 +14,12 @@ var _ = Describe("∅MQ", func() {
 			const topic = "test"
 			const msg = "foo"
 
-			publisher := zeromq.NewPublisher()
+			publisher, err := zeromq.NewPublisher()
+			Expect(err).To(BeNil())
 			defer publisher.Close()
 
 			msgChan := make(chan string, 5)
-			subscriber := zeromq.NewSubscriber(topic, msgChan)
+			subscriber := zeromq.NewSubscriber([]string{topic}, msgChan)
 			defer subscriber.Close()
 			subscriber.Start()
 

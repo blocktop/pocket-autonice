@@ -6,10 +6,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/blocktop/pocket-autonice/config"
 	"github.com/blocktop/pocket-autonice/zeromq"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"os"
 	"os/signal"
 	"syscall"
@@ -27,7 +25,6 @@ var pingCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		defer publisher.Close()
-		topic := viper.GetString(config.PubSubTopic)
 		ticker := time.NewTicker(5 * time.Second)
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -38,7 +35,7 @@ var pingCmd = &cobra.Command{
 				println()
 				return
 			case <-ticker.C:
-				if err := publisher.Publish("ping", topic); err != nil {
+				if err := publisher.Publish("ping!", "ping"); err != nil {
 					fmt.Printf("\nfailed to publish ping: %s\n", err)
 				}
 				fmt.Printf(".")
