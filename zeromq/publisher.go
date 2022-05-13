@@ -3,6 +3,7 @@ package zeromq
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"strings"
 	"time"
 
 	"github.com/blocktop/pocket-autonice/config"
@@ -49,7 +50,7 @@ func (p *Publisher) createSock() error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create zmq publisher socket")
 	}
-	if err = sock.SetLinger(100 * time.Millisecond); err != nil {
+	if err = sock.SetLinger(0); err != nil {
 		return errors.Wrap(err, "failed to set linger on zmq publisher socket")
 	}
 	if err = sock.SetHeartbeatIvl(time.Second); err != nil {
@@ -58,7 +59,15 @@ func (p *Publisher) createSock() error {
 	if err = sock.SetReconnectIvl(time.Minute); err != nil {
 		return errors.Wrap(err, "failed to set reconnect interval")
 	}
-	endpoint := fmt.Sprintf("tcp://%s", viper.GetString(config.PublisherAddress))
+	if strings.ToLower(viper.GetString(config.LogLevel)) == "trace" {
+		const monitorAddr = "inproc://monitor.pub"
+		if err = sock.Monitor(monitorAddr, zmq.EVENT_ALL); err != nil {
+			return errors.Wrap(err, "failed to configure monitor on zmq publisher socket")
+		}
+		go monitorSocket(zctx, monitorAddr, "PUB")
+		time.Sleep(time.Second)
+	}
+	endpoint := fmt.Sprintf("tcp://%s", viper.GetString(config.PublisherBindAddress))
 	if err = sock.Bind(endpoint); err != nil {
 		return errors.Wrap(err, "failed to bind zmq publisher socket")
 	}

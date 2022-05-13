@@ -28,7 +28,7 @@ func Start(ctx context.Context) {
 		log.Fatalf(err.Error())
 	}
 
-	log.Infof("starting message consumer on %s", viper.GetString(config.PublisherAddress))
+	log.Infof("starting message consumer on %s", viper.GetString(config.SubscriberBindAddress))
 
 	go processMessages(ctx, messageChan)
 

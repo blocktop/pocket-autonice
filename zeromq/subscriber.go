@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"strings"
 	"time"
 )
 
@@ -42,14 +43,31 @@ func (s *Subscriber) Start() error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create zmq subscriber socket")
 	}
+	if err = sock.SetLinger(0); err != nil {
+		return errors.Wrap(err, "failed to set linger on zmq subscriber socket")
+	}
 	if err = sock.SetHeartbeatIvl(time.Second); err != nil {
 		return errors.Wrap(err, "failed to set heartbeat interval (requires zmq >= 4.2")
 	}
 	if err = sock.SetReconnectIvl(time.Minute); err != nil {
 		return errors.Wrap(err, "failed to set reconnect interval on zmq subscriber socket")
 	}
-	endpoint := fmt.Sprintf("tcp://%s;%s", viper.GetString(config.SubscriberAddress),
-		viper.GetString(config.PublisherAddress))
+	if strings.ToLower(viper.GetString(config.LogLevel)) == "trace" {
+		const monitorAddr = "inproc://monitor.sub"
+		if err = sock.Monitor(monitorAddr, zmq.EVENT_ALL); err != nil {
+			return errors.Wrap(err, "failed to configure monitor on zmq publisher socket")
+		}
+		go monitorSocket(zctx, monitorAddr, "SUB")
+		time.Sleep(time.Second)
+	}
+	var endpoint string
+	subBindAddr := viper.GetString(config.SubscriberBindAddress)
+	subPubAddr := viper.GetString(config.SubscriberPublisherAddress)
+	if subBindAddr == "" {
+		endpoint = fmt.Sprintf("tcp://%s", subPubAddr)
+	} else {
+		endpoint = fmt.Sprintf("tcp://%s;%s", subBindAddr, subPubAddr)
+	}
 	if err = sock.Connect(endpoint); err != nil {
 		return errors.Wrap(err, "failed to connect zmq subscriber socket")
 	}

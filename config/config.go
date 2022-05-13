@@ -8,15 +8,16 @@ import (
 )
 
 const (
-	LogLevel               = "log_level"
-	LogFormatJSON          = "log_format_json"
-	NiceValue              = "nice_value"
-	NiceRevertDelayMinutes = "nice_revert_delay_minutes"
-	SubscriberAddress      = "subscriber_address"
-	PublisherAddress       = "publisher_address"
-	PrometheusPort         = "prometheus_port"
-	RunWithSudo            = "run_with_sudo"
-	Chains                 = "chains"
+	LogLevel                   = "log_level"
+	LogFormatJSON              = "log_format_json"
+	NiceValue                  = "nice_value"
+	NiceRevertDelayMinutes     = "nice_revert_delay_minutes"
+	SubscriberBindAddress      = "subscriber_bind_address"
+	SubscriberPublisherAddress = "subscriber_publisher_address"
+	PublisherBindAddress       = "publisher_bind_address"
+	PrometheusPort             = "prometheus_port"
+	RunWithSudo                = "run_with_sudo"
+	Chains                     = "chains"
 )
 
 // InitConfig initializes the configuration for the CLI. See documentation.
@@ -27,8 +28,9 @@ func InitConfig() {
 	viper.SetDefault(LogFormatJSON, false)
 	viper.SetDefault(NiceValue, -10)
 	viper.SetDefault(NiceRevertDelayMinutes, 5)
-	viper.SetDefault(SubscriberAddress, "127.0.0.1:5555")
-	viper.SetDefault(PublisherAddress, "127.0.0.1:5555")
+	viper.SetDefault(SubscriberBindAddress, "")
+	viper.SetDefault(SubscriberPublisherAddress, "127.0.0.1:5555")
+	viper.SetDefault(PublisherBindAddress, "127.0.0.1:5555")
 	viper.SetDefault(PrometheusPort, 8083)
 	viper.SetDefault(RunWithSudo, false)
 
