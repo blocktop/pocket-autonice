@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/blocktop/pocket-autonice/config"
 	"github.com/blocktop/pocket-autonice/zeromq"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -41,7 +39,7 @@ will renice all harmony processes across the cluster.'
 			os.Exit(1)
 		}
 		defer publisher.Close()
-		err = publisher.Publish(chainID, viper.GetString(config.PubSubTopic))
+		err = publisher.Publish(chainID, chainID)
 		if err != nil {
 			log.Fatalf("failed to publish renice for chain %s: %s", chainID, err)
 		}
