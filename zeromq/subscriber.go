@@ -59,11 +59,7 @@ func (s *Subscriber) Start() error {
 	var endpoint string
 	subBindAddr := viper.GetString(config.SubscriberBindAddress)
 	subPubAddr := viper.GetString(config.SubscriberPublisherAddress)
-	if subBindAddr == "" {
-		endpoint = fmt.Sprintf("tcp://%s", subPubAddr)
-	} else {
-		endpoint = fmt.Sprintf("epgm://%s;%s", subBindAddr, subPubAddr)
-	}
+	endpoint = fmt.Sprintf("epgm://%s;%s", subBindAddr, subPubAddr)
 	if err = sock.Connect(endpoint); err != nil {
 		return errors.Wrapf(err, "failed to connect zmq subscriber socket %s", endpoint)
 	}
