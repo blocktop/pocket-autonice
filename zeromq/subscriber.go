@@ -62,7 +62,7 @@ func (s *Subscriber) Start() error {
 	if subBindAddr == "" {
 		endpoint = fmt.Sprintf("tcp://%s", subPubAddr)
 	} else {
-		endpoint = fmt.Sprintf("epgm://%s;%s", subBindAddr, subPubAddr)
+		endpoint = fmt.Sprintf("pgm://%s;%s", subBindAddr, subPubAddr)
 	}
 	if err = sock.Connect(endpoint); err != nil {
 		return errors.Wrap(err, "failed to connect zmq subscriber socket")
