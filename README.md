@@ -96,6 +96,8 @@ subscriber_address: 10.0.0.3:5555
 
 Any open port can be used. For a single server setup, replace the IP address with `127.0.0.1`.
 
+Open the firewall as needed to support both UDP and TCP on the chosen port(s).
+
 #### Details
 
 Pocket-autonice works by looking for changes in the relay counts in the prometheus output of the pocket-core process.
