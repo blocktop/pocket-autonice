@@ -6,8 +6,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func monitorSocket(zctx *zmq.Context, addr, sockType string) {
-	s, err := zctx.NewSocket(zmq.PAIR)
+func monitorSocket(addr, sockType string) {
+	s, err := zmq.NewSocket(zmq.PAIR)
 	if err != nil {
 		log.Fatalf("%s failed to create monitor socket: %s", sockType, err)
 		return

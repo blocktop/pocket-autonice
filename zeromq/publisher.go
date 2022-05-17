@@ -42,29 +42,19 @@ func (p *Publisher) Publish(msg, topic string) error {
 }
 
 func (p *Publisher) createSock() error {
-	zctx, err := zmq.NewContext()
-	if err != nil {
-		return errors.Wrap(err, "failed to create zmq context")
-	}
-	sock, err := zctx.NewSocket(zmq.PUB)
+	sock, err := zmq.NewSocket(zmq.PUB)
 	if err != nil {
 		return errors.Wrap(err, "failed to create zmq publisher socket")
 	}
 	if err = sock.SetLinger(0); err != nil {
 		return errors.Wrap(err, "failed to set linger on zmq publisher socket")
 	}
-	if err = sock.SetHeartbeatIvl(time.Second); err != nil {
-		return errors.Wrap(err, "failed to set heartbeat interval (requires zmq >= 4.2)")
-	}
-	if err = sock.SetReconnectIvl(time.Minute); err != nil {
-		return errors.Wrap(err, "failed to set reconnect interval")
-	}
 	if strings.ToLower(viper.GetString(config.LogLevel)) == "trace" {
 		const monitorAddr = "inproc://monitor.pub"
 		if err = sock.Monitor(monitorAddr, zmq.EVENT_ALL); err != nil {
 			return errors.Wrap(err, "failed to configure monitor on zmq publisher socket")
 		}
-		go monitorSocket(zctx, monitorAddr, "PUB")
+		go monitorSocket(monitorAddr, "PUB")
 		time.Sleep(time.Second)
 	}
 	endpoint := fmt.Sprintf("tcp://%s", viper.GetString(config.PublisherBindAddress))

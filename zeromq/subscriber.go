@@ -35,29 +35,25 @@ func (s *Subscriber) Start() error {
 		return nil
 	}
 
-	zctx, err := zmq.NewContext()
-	if err != nil {
-		return errors.Wrap(err, "failed to create zmq context")
-	}
-	sock, err := zctx.NewSocket(zmq.SUB)
+	sock, err := zmq.NewSocket(zmq.SUB)
 	if err != nil {
 		return errors.Wrap(err, "failed to create zmq subscriber socket")
 	}
 	if err = sock.SetLinger(0); err != nil {
 		return errors.Wrap(err, "failed to set linger on zmq subscriber socket")
 	}
-	if err = sock.SetHeartbeatIvl(time.Second); err != nil {
-		return errors.Wrap(err, "failed to set heartbeat interval (requires zmq >= 4.2")
-	}
-	if err = sock.SetReconnectIvl(time.Minute); err != nil {
-		return errors.Wrap(err, "failed to set reconnect interval on zmq subscriber socket")
-	}
+	// if err = sock.SetHeartbeatIvl(time.Second); err != nil {
+	// 	return errors.Wrap(err, "failed to set heartbeat interval (requires zmq >= 4.2")
+	// }
+	// if err = sock.SetReconnectIvl(time.Minute); err != nil {
+	// 	return errors.Wrap(err, "failed to set reconnect interval on zmq subscriber socket")
+	// }
 	if strings.ToLower(viper.GetString(config.LogLevel)) == "trace" {
 		const monitorAddr = "inproc://monitor.sub"
 		if err = sock.Monitor(monitorAddr, zmq.EVENT_ALL); err != nil {
 			return errors.Wrap(err, "failed to configure monitor on zmq publisher socket")
 		}
-		go monitorSocket(zctx, monitorAddr, "SUB")
+		go monitorSocket(monitorAddr, "SUB")
 		time.Sleep(time.Second)
 	}
 	var endpoint string
