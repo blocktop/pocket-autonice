@@ -8,6 +8,8 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	golog "log"
+	"os"
 	"time"
 )
 
@@ -28,12 +30,12 @@ func NewSubscriber(topics []string, messageChan chan<- string) *Subscriber {
 	}
 }
 
-func (s *Subscriber) Start() error {
+func (s *Subscriber) Start(ctx context.Context) error {
 	if s.sock != nil {
 		return nil
 	}
 
-	sock := zmq.NewSub(context.Background(), zmq.WithDialerRetry(time.Second))
+	sock := zmq.NewSub(ctx, zmq.WithDialerRetry(time.Second), zmq.WithLogger(golog.New(os.Stdout, "zmqsub", golog.LUTC)))
 	var endpoint string
 	subPubAddr := viper.GetString(config.SubscriberPublisherAddress)
 	endpoint = fmt.Sprintf("tcp://%s", subPubAddr)

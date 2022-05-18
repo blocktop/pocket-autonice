@@ -29,6 +29,7 @@ func (p *Publisher) Publish(msg, topic string) error {
 		return fmt.Errorf("publisher socket has been closed")
 	}
 	m := zmq.NewMsgFrom([]byte(topic), []byte(msg))
+	log.Debugf("publisher sending [%s]", m.String())
 	err := p.sock.Send(m)
 	if err != nil {
 		err = errors.Wrap(err, "error occurred publishing message")

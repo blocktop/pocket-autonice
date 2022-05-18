@@ -24,11 +24,12 @@ func Start(ctx context.Context) {
 
 	subscriber = zeromq.NewSubscriber(topics, messageChan)
 	defer subscriber.Close()
-	if err := subscriber.Start(); err != nil {
-		log.Fatalf(err.Error())
-	}
 
 	log.Infof("starting message consumer on %s", viper.GetString(config.SubscriberBindAddress))
+
+	if err := subscriber.Start(ctx); err != nil {
+		log.Fatalf(err.Error())
+	}
 
 	go processMessages(ctx, messageChan)
 

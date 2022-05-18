@@ -1,6 +1,7 @@
 package zeromq_test
 
 import (
+	"context"
 	"fmt"
 	"github.com/blocktop/pocket-autonice/config"
 	"github.com/blocktop/pocket-autonice/zeromq"
@@ -26,7 +27,7 @@ var _ = Describe("∅MQ", func() {
 			msgChan := make(chan string, 5)
 			subscriber := zeromq.NewSubscriber([]string{topic}, msgChan)
 			defer subscriber.Close()
-			subscriber.Start()
+			subscriber.Start(context.Background())
 
 			var msgCount int
 			stopChan := make(chan bool)
