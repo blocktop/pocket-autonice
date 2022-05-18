@@ -4,13 +4,13 @@ go 1.17
 
 require (
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
+	github.com/go-zeromq/zmq4 v0.14.1
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.19.0
-	github.com/pebbe/zmq4 v1.2.8
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.0-beta.8 // indirect
 	github.com/pkg/errors v0.9.1
@@ -30,8 +30,10 @@ require (
 )
 
 require (
+	github.com/go-zeromq/goczmq/v4 v4.2.2 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )

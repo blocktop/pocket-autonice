@@ -1,19 +1,19 @@
 package zeromq
 
 import (
+	"context"
 	"fmt"
 	"github.com/pkg/errors"
-	"strings"
 	"time"
 
 	"github.com/blocktop/pocket-autonice/config"
-	zmq "github.com/pebbe/zmq4"
+	zmq "github.com/go-zeromq/zmq4"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 type Publisher struct {
-	sock *zmq.Socket
+	sock zmq.Socket
 }
 
 func NewPublisher() (*Publisher, error) {
@@ -28,11 +28,8 @@ func (p *Publisher) Publish(msg, topic string) error {
 	if p.sock == nil {
 		return fmt.Errorf("publisher socket has been closed")
 	}
-
-	_, err := p.sock.Send(topic, zmq.SNDMORE)
-	if err == nil {
-		_, err = p.sock.Send(msg, 0)
-	}
+	m := zmq.NewMsgFrom([]byte(topic), []byte(msg))
+	err := p.sock.Send(m)
 	if err != nil {
 		err = errors.Wrap(err, "error occurred publishing message")
 		log.Errorf(err.Error())
@@ -42,23 +39,9 @@ func (p *Publisher) Publish(msg, topic string) error {
 }
 
 func (p *Publisher) createSock() error {
-	sock, err := zmq.NewSocket(zmq.PUB)
-	if err != nil {
-		return errors.Wrap(err, "failed to create zmq publisher socket")
-	}
-	if err = sock.SetLinger(0); err != nil {
-		return errors.Wrap(err, "failed to set linger on zmq publisher socket")
-	}
-	if strings.ToLower(viper.GetString(config.LogLevel)) == "trace" {
-		const monitorAddr = "inproc://monitor.pub"
-		if err = sock.Monitor(monitorAddr, zmq.EVENT_ALL); err != nil {
-			return errors.Wrap(err, "failed to configure monitor on zmq publisher socket")
-		}
-		go monitorSocket(monitorAddr, "PUB")
-		time.Sleep(time.Second)
-	}
+	sock := zmq.NewPub(context.Background())
 	endpoint := fmt.Sprintf("tcp://%s", viper.GetString(config.PublisherBindAddress))
-	if err = sock.Bind(endpoint); err != nil {
+	if err := sock.Listen(endpoint); err != nil {
 		return errors.Wrap(err, "failed to bind zmq publisher socket")
 	}
 	p.sock = sock
