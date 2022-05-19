@@ -15,7 +15,7 @@ import (
 var _ = Describe("∅MQ", func() {
 	Context("pubsub", func() {
 		It("should send messages from publisher to subscriber", func() {
-			const topic = "test"
+			const topic = ""
 			const msg = "foo"
 			viper.Set(config.LogLevel, "trace")
 			log.SetLevel(log.TraceLevel)

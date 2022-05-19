@@ -1,19 +1,20 @@
 package zeromq
 
 import (
-	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"time"
 
 	"github.com/blocktop/pocket-autonice/config"
-	zmq "github.com/go-zeromq/zmq4"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"go.nanomsg.org/mangos/v3"
+	"go.nanomsg.org/mangos/v3/protocol/pub"
+	_ "go.nanomsg.org/mangos/v3/transport/tcp"
 )
 
 type Publisher struct {
-	sock zmq.Socket
+	sock mangos.Socket
 }
 
 func NewPublisher() (*Publisher, error) {
@@ -28,8 +29,8 @@ func (p *Publisher) Publish(msg, topic string) error {
 	if p.sock == nil {
 		return fmt.Errorf("publisher socket has been closed")
 	}
-	m := zmq.NewMsgFrom([]byte(topic), []byte(msg))
-	log.Debugf("publisher sending [%s]", m.String())
+	log.Debugf("publisher sending [%s]", msg)
+	m := []byte(topic + msg)
 	err := p.sock.Send(m)
 	if err != nil {
 		err = errors.Wrap(err, "error occurred publishing message")
@@ -40,10 +41,13 @@ func (p *Publisher) Publish(msg, topic string) error {
 }
 
 func (p *Publisher) createSock() error {
-	sock := zmq.NewPub(context.Background())
+	sock, err := pub.NewSocket()
+	if err != nil {
+		return errors.Wrap(err, "failed to create publisher socket")
+	}
 	endpoint := fmt.Sprintf("tcp://%s", viper.GetString(config.PublisherBindAddress))
 	if err := sock.Listen(endpoint); err != nil {
-		return errors.Wrap(err, "failed to bind zmq publisher socket")
+		return errors.Wrap(err, "failed to bind publisher socket")
 	}
 	p.sock = sock
 

@@ -3,18 +3,18 @@ package zeromq
 import (
 	"context"
 	"fmt"
+
 	"github.com/blocktop/pocket-autonice/config"
-	zmq "github.com/go-zeromq/zmq4"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	golog "log"
-	"os"
-	"time"
+	"go.nanomsg.org/mangos/v3"
+	"go.nanomsg.org/mangos/v3/protocol/sub"
+	_ "go.nanomsg.org/mangos/v3/transport/tcp"
 )
 
 type Subscriber struct {
-	sock        zmq.Socket
+	sock        mangos.Socket
 	topics      []string
 	receiveChan chan string
 	out         chan<- string
@@ -35,15 +35,24 @@ func (s *Subscriber) Start(ctx context.Context) error {
 		return nil
 	}
 
-	sock := zmq.NewSub(ctx, zmq.WithDialerRetry(time.Second), zmq.WithLogger(golog.New(os.Stdout, "zmqsub", golog.LUTC)))
+	sock, err := sub.NewSocket()
+	if err != nil {
+		return errors.Wrap(err, "failed to create subscriber socket")
+	}
+	bindAddr := viper.GetString(config.SubscriberBindAddress)
+	if bindAddr != "" {
+		if err = sock.SetOption(mangos.OptionLocalAddr, bindAddr); err != nil {
+			return errors.Wrap(err, "failed to set subscriber bind address")
+		}
+	}
 	var endpoint string
 	subPubAddr := viper.GetString(config.SubscriberPublisherAddress)
 	endpoint = fmt.Sprintf("tcp://%s", subPubAddr)
 	if err := sock.Dial(endpoint); err != nil {
-		return errors.Wrapf(err, "failed to connect zmq subscriber socket %s", endpoint)
+		return errors.Wrapf(err, "failed to connect subscriber socket %s", endpoint)
 	}
 	for _, t := range s.topics {
-		if err := sock.SetOption(zmq.OptionSubscribe, t); err != nil {
+		if err = sock.SetOption(mangos.OptionSubscribe, t); err != nil {
 			return errors.Wrap(err, "failed to set topic subscription")
 		}
 	}
@@ -68,11 +77,8 @@ func (s *Subscriber) receiveMessages() {
 			log.Errorf("failed to receive message: %s", err)
 			continue
 		}
-		log.Debugf("received [%s]", msg.String())
-		if len(msg.Frames) < 2 {
-			continue
-		}
-		s.receiveChan <- string(msg.Frames[1])
+		log.Debugf("received [%s]", string(msg))
+		s.receiveChan <- string(msg)
 	}
 }
 
