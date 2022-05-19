@@ -47,9 +47,6 @@ func (s *Subscriber) Start(ctx context.Context) error {
 			return errors.Wrap(err, "failed to set topic subscription")
 		}
 	}
-	if err := sock.Dial(endpoint); err != nil {
-		return errors.Wrapf(err, "failed to connect zmq subscriber socket %s", endpoint)
-	}
 
 	s.sock = sock
 
