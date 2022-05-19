@@ -25,7 +25,7 @@ func Start(ctx context.Context) {
 	subscriber = zeromq.NewSubscriber(topics, messageChan)
 	defer subscriber.Close()
 
-	log.Infof("starting message consumer on %s", viper.GetString(config.SubscriberBindAddress))
+	log.Infof("message consumer dialing %s", viper.GetString(config.SubscriberPublisherAddress))
 
 	if err := subscriber.Start(ctx); err != nil {
 		log.Fatalf(err.Error())

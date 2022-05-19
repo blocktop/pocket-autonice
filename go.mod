@@ -32,6 +32,7 @@ require (
 require (
 	github.com/go-zeromq/goczmq/v4 v4.2.2 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
+	go.nanomsg.org/mangos/v3 v3.4.1 // indirect
 	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
