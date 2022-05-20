@@ -1,4 +1,4 @@
-package zeromq
+package messaging
 
 import (
 	"context"
@@ -16,17 +16,17 @@ import (
 type Subscriber struct {
 	sock        mangos.Socket
 	topics      []string
-	receiveChan chan string
-	out         chan<- string
+	receiveChan chan []byte
+	out         chan<- PubSubMessage
 	ctx         context.Context
 	cancel      context.CancelFunc
 }
 
-func NewSubscriber(topics []string, messageChan chan<- string) *Subscriber {
+func NewSubscriber(topics []string, messageChan chan<- PubSubMessage) *Subscriber {
 	return &Subscriber{
 		topics:      topics,
 		out:         messageChan,
-		receiveChan: make(chan string, 256),
+		receiveChan: make(chan []byte, 256),
 	}
 }
 
@@ -69,16 +69,15 @@ func (s *Subscriber) Start(ctx context.Context) error {
 
 func (s *Subscriber) receiveMessages() {
 	for {
-		msg, err := s.sock.Recv()
+		recv, err := s.sock.Recv()
 		if err != nil {
-			if err.Error() == "context canceled" {
+			if err.Error() == "context canceled" || err.Error() == "object closed" {
 				return
 			}
 			log.Errorf("failed to receive message: %s", err)
 			continue
 		}
-		log.Debugf("received [%s]", string(msg))
-		s.receiveChan <- string(msg)
+		s.receiveChan <- recv
 	}
 }
 
@@ -88,8 +87,10 @@ func (s *Subscriber) receiveMessagesChan() {
 		case <-s.ctx.Done():
 			log.Debug("exiting message receiver")
 			return
-		case msg := <-s.receiveChan:
-			s.out <- msg
+		case data := <-s.receiveChan:
+			message := UnmarshalPubSubMessage(data)
+			log.Debugf("received [%s]", message)
+			s.out <- message
 		}
 	}
 }

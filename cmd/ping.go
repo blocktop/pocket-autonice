@@ -6,7 +6,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/blocktop/pocket-autonice/zeromq"
+	"github.com/blocktop/pocket-autonice/messaging"
 	"github.com/spf13/cobra"
 	"os"
 	"os/signal"
@@ -19,13 +19,15 @@ var pingCmd = &cobra.Command{
 	Use:   "ping",
 	Short: "Send ping messages out to all listening autonice servers.",
 	Run: func(cmd *cobra.Command, args []string) {
-		publisher, err := zeromq.NewPublisher()
+		publisher, err := messaging.NewPublisher()
 		if err != nil {
 			fmt.Printf("failed to start publisher: %s\n", err)
 			os.Exit(1)
 		}
 		defer publisher.Close()
 		ticker := time.NewTicker(5 * time.Second)
+		message := messaging.NewPubSubMessage("ping", "ping!")
+
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
@@ -35,7 +37,7 @@ var pingCmd = &cobra.Command{
 				println()
 				return
 			case <-ticker.C:
-				if err := publisher.Publish("ping!", "ping"); err != nil {
+				if err := publisher.Publish(message); err != nil {
 					fmt.Printf("\nfailed to publish ping: %s\n", err)
 				}
 				fmt.Printf(".")

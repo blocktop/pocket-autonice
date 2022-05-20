@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/blocktop/pocket-autonice/zeromq"
+	"github.com/blocktop/pocket-autonice/messaging"
 	log "github.com/sirupsen/logrus"
 	"os"
 
@@ -33,13 +33,14 @@ will renice all harmony processes across the cluster.'
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		chainID := args[0]
-		publisher, err := zeromq.NewPublisher()
+		publisher, err := messaging.NewPublisher()
 		if err != nil {
 			fmt.Printf("failed to start publisher: %s\n", err)
 			os.Exit(1)
 		}
 		defer publisher.Close()
-		err = publisher.Publish(chainID, chainID)
+		message := messaging.NewPubSubMessage(chainID, chainID)
+		err = publisher.Publish(message)
 		if err != nil {
 			log.Fatalf("failed to publish renice for chain %s: %s", chainID, err)
 		}

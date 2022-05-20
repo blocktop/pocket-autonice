@@ -1,4 +1,4 @@
-package zeromq_test
+package messaging_test
 
 import (
 	"github.com/blocktop/pocket-autonice/config"
@@ -8,9 +8,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestZeromq(t *testing.T) {
+func TestMessaging(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Zeromq Suite")
+	RunSpecs(t, "Messaging Suite")
 }
 
 var _ = BeforeEach(func() {

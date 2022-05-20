@@ -3,6 +3,7 @@ package prometheusPoller
 import (
 	"context"
 	"fmt"
+	"github.com/blocktop/pocket-autonice/messaging"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -10,13 +11,16 @@ import (
 	"time"
 
 	"github.com/blocktop/pocket-autonice/config"
-	"github.com/blocktop/pocket-autonice/zeromq"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
+const (
+	pocketChainID = "0001"
+)
+
 var (
-	publisher   *zeromq.Publisher
+	publisher   *messaging.Publisher
 	metricsUrl  string
 	relayCounts = make(map[string]int)
 	re          = regexp.MustCompile(`pocketcore_service_relay_count_for_([0-9A-F]{4}) (\d+)`) // ([0-9A-Z]{4}) (\d+)`)
@@ -24,7 +28,7 @@ var (
 
 func Start(ctx context.Context) error {
 	var err error
-	publisher, err = zeromq.NewPublisher()
+	publisher, err = messaging.NewPublisher()
 	if err != nil {
 		return err
 	}
@@ -107,7 +111,8 @@ func publish(messageChains []string) {
 			has0001 = true
 		}
 		log.Infof("poller publishing message %s", chainID)
-		if err := publisher.Publish(chainID, chainID); err != nil {
+		message := messaging.NewPubSubMessage(chainID, chainID)
+		if err := publisher.Publish(message); err != nil {
 			log.Errorf("failed to publish %s: %s", chainID, err)
 			return
 		}
@@ -115,7 +120,8 @@ func publish(messageChains []string) {
 	if len(messageChains) > 0 && !has0001 {
 		// boost pocket too
 		log.Debug("publishing message 0001")
-		if err := publisher.Publish("0001", "0001"); err != nil {
+		message := messaging.NewPubSubMessage(pocketChainID, pocketChainID)
+		if err := publisher.Publish(message); err != nil {
 			log.Errorf("failed to publish 0001: %s", err)
 			return
 		}

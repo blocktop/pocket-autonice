@@ -117,7 +117,7 @@ const ConfigExample = `# Place the config.yaml file in either the $HOME/.pocket-
 # node should also be setup as a client to receive messages to it. If all
 # blockchains are running locally, then this value can can be left as
 # localhost (the default).
-# subscriber_address: 127.0.0.1:5555
+# subscriber_publisher_address: 127.0.0.1:5555
 
 # For the pocket-core server, the address to bind the zeromq publisher to.
 # publisher_address: 127.0.0.1:5555

@@ -1,10 +1,10 @@
-package zeromq_test
+package messaging_test
 
 import (
 	"context"
 	"fmt"
 	"github.com/blocktop/pocket-autonice/config"
-	"github.com/blocktop/pocket-autonice/zeromq"
+	"github.com/blocktop/pocket-autonice/messaging"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
@@ -12,20 +12,20 @@ import (
 	"time"
 )
 
-var _ = Describe("∅MQ", func() {
+var _ = Describe("Messaging", func() {
 	Context("pubsub", func() {
 		It("should send messages from publisher to subscriber", func() {
-			const topic = ""
+			const topic = "test"
 			const msg = "foo"
 			viper.Set(config.LogLevel, "trace")
 			log.SetLevel(log.TraceLevel)
 
-			publisher, err := zeromq.NewPublisher()
+			publisher, err := messaging.NewPublisher()
 			Expect(err).To(BeNil())
 			defer publisher.Close()
 
-			msgChan := make(chan string, 5)
-			subscriber := zeromq.NewSubscriber([]string{topic}, msgChan)
+			msgChan := make(chan messaging.PubSubMessage, 5)
+			subscriber := messaging.NewSubscriber([]string{topic}, msgChan)
 			defer subscriber.Close()
 			subscriber.Start(context.Background())
 
@@ -45,7 +45,8 @@ var _ = Describe("∅MQ", func() {
 
 			i := 5
 			for i > 0 {
-				err := publisher.Publish(fmt.Sprintf("%s-%d", msg, i), topic)
+				message := messaging.NewPubSubMessage(topic, fmt.Sprintf("%s-%d", msg, i))
+				err := publisher.Publish(message)
 				Expect(err).ToNot(HaveOccurred())
 				i--
 				time.Sleep(10 * time.Millisecond)

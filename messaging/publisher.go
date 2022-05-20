@@ -1,4 +1,4 @@
-package zeromq
+package messaging
 
 import (
 	"fmt"
@@ -25,13 +25,12 @@ func NewPublisher() (*Publisher, error) {
 	return p, nil
 }
 
-func (p *Publisher) Publish(msg, topic string) error {
+func (p *Publisher) Publish(message PubSubMessage) error {
 	if p.sock == nil {
 		return fmt.Errorf("publisher socket has been closed")
 	}
-	log.Debugf("publisher sending [%s]", msg)
-	m := []byte(topic + msg)
-	err := p.sock.Send(m)
+	log.Debugf("publisher sending [%s]", message)
+	err := p.sock.Send(message.Marshal())
 	if err != nil {
 		err = errors.Wrap(err, "error occurred publishing message")
 		log.Errorf(err.Error())

@@ -3,14 +3,14 @@ package client
 import (
 	"context"
 	"github.com/blocktop/pocket-autonice/config"
+	"github.com/blocktop/pocket-autonice/messaging"
 	"github.com/blocktop/pocket-autonice/renicer"
-	"github.com/blocktop/pocket-autonice/zeromq"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 var (
-	subscriber *zeromq.Subscriber
+	subscriber *messaging.Subscriber
 )
 
 func Start(ctx context.Context) {
@@ -20,9 +20,9 @@ func Start(ctx context.Context) {
 		topics = append(topics, chainID)
 	}
 
-	messageChan := make(chan string, 256)
+	messageChan := make(chan messaging.PubSubMessage, 256)
 
-	subscriber = zeromq.NewSubscriber(topics, messageChan)
+	subscriber = messaging.NewSubscriber(topics, messageChan)
 	defer subscriber.Close()
 
 	log.Infof("message consumer dialing %s", viper.GetString(config.SubscriberPublisherAddress))
@@ -38,23 +38,22 @@ func Start(ctx context.Context) {
 	log.Info("stopping message consumer")
 }
 
-func processMessages(ctx context.Context, messageChan chan string) {
+func processMessages(ctx context.Context, messageChan chan messaging.PubSubMessage) {
 	for {
 		select {
 		case <-ctx.Done():
 			log.Debug("exiting client loop")
 			return
-		case msg := <-messageChan:
-			log.Debugf("consumer received message %s", msg)
-			processMessage(ctx, msg)
+		case message := <-messageChan:
+			processMessage(ctx, message)
 		}
 	}
 }
 
-func processMessage(ctx context.Context, msg string) {
-	if string(msg) == "ping" {
+func processMessage(ctx context.Context, message messaging.PubSubMessage) {
+	if message.Topic() == "ping" {
 		log.Info("consumer received ping")
 		return
 	}
-	renicer.Renice(ctx, msg)
+	renicer.Renice(ctx, message.Message())
 }
